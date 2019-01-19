@@ -6,7 +6,7 @@ class TestMyCryptoWallet(unittest.TestCase):
 	def test_dummyTest(self):
 		wallete = address.Address()
 		wallete.foo()
-		self.assertEqual('fooo'.upper(), 'FOOO')
+		self.assertEqual('foo'.upper(), 'FOO')
 
 if __name__ == '__main__':
     unittest.main()
