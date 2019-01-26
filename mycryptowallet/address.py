@@ -100,4 +100,15 @@ class Address:
         return d
 
     def sign(self, data):
-        return b"to be done"
+        sk = ecdsa.SigningKey.from_string(self.privKey, curve=ecdsa.SECP256k1)
+        return sk.sign(data)
+
+    def verify(self, data, signature):
+        vk = ecdsa.SigningKey.from_string(self.privKey, curve=ecdsa.SECP256k1).get_verifying_key()
+        try:
+            return vk.verify(signature, data)
+        except ecdsa.keys.BadSignatureError:
+            return False
+        except:
+            raise BaseException("Verify failed. Unhandled exception.")
+

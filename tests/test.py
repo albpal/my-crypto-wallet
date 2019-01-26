@@ -6,7 +6,8 @@ from testAddress import TestAddress
 class TestMyCryptoWallet(unittest.TestCase):
     def test_address(self):
         address = TestAddress(self)
-        address.test()
+        address.testAddressGeneration()
+        address.testAddressSigning()
 
 if __name__ == '__main__':
     unittest.main()
