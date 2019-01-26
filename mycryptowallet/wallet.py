@@ -31,7 +31,7 @@ def execute():
     else:
         showHelp()
 
-if len(sys.argv) == 0:
+if len(sys.argv) == 1:
     showHelp()
 else:
     execute()
