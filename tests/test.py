@@ -13,6 +13,8 @@ class TestMyCryptoWallet(unittest.TestCase):
     def test_wallet(self):
         wallet = TestWallet(self)
         wallet.testCreateAddress()
+        wallet.testListAddress()
+    
 
 if __name__ == '__main__':
     unittest.main()
