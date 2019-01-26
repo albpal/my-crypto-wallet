@@ -1,6 +1,6 @@
 [![Build Status](http://37.247.52.181:8080/buildStatus/icon?job=mycryptowallet)](http://37.247.52.181:8080/job/mycryptowallet/)
 # my-crypto-wallet
-Simple wallet I'm building for learning purposes. To use it (Python 3.6 or higer):
+Simple wallet I'm building for learning purposes. To use it (Python 3.6 or higher):
 
 ```
 python wallet.py create address
