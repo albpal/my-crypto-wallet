@@ -20,6 +20,9 @@ class TestWallet:
         addresses=w.listAddresses()
         self.testunit.assertTrue(btc_address1 in addresses)
         self.testunit.assertTrue(btc_address2 in addresses)
+        w.deleteAddress(btc_address1)
+        addresses=w.listAddresses()
+        self.testunit.assertFalse(btc_address1 in addresses)
 
 
 
