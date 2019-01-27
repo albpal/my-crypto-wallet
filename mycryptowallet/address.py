@@ -3,77 +3,36 @@ import hashlib
 import base58
 import secrets
 import binascii
-
-class AddressFormat:
-    def __init__(self, format):
-        if format.lower() == "segwit":
-            raise("Function to be done.")
-        elif format.lower() == "classic":
-            self.format_func = self.classic
-        else:
-            raise BaseException("Error: Address format %s is not valid."%(format))
-
-    def format(self, address):
-        return self.format_func(address)
-
-    def classic(self, address):
-        return address
-
-class PublicKeyFormat:
-    def __init__(self, format):
-        if format.lower() == "compress":
-            raise("Function to be done.")
-        elif format.lower() == "uncompress":
-            self.format_func = self.uncompressFormat
-        else:
-            raise BaseException("Error: Public key format %s is not valid."%(format))
-
-    def format(self, pubKey):
-        return self.format_func(pubKey)
-
-    def uncompressFormat(self, pubKey):
-        return pubKey
-
-class PrivateKeyFormat:
-    def __init__(self, format):
-        if format.upper() == "WIF":
-            raise("Function to be done.")
-        elif format.upper() == "STANDARD":
-            self.format_func = self.standardFormat
-        else:
-            raise BaseException("Error: Private key format %s is not valid."%(format))
-
-    def format(self, privKey):
-        return self.format_func(privKey)
-
-    def standardFormat(self, privKey):
-        return privKey
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+from formats import *
 
 class Address:
     ## This Address class stores its data in big endian bytes
     ##      self.privKey is in its standard format (raw number stored in bytes)
     ##      The rest of the data are generated on the fly depending of the different configurations (mainly formats)
-    ## Useful link: https://en.bitcoin.it/wiki/Address, https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    def __init__(self, privKeyFormat="standard", pubKeyFormat="uncompress", addressFormat="classic", privKey=None):
-        self.privKeyFormat = PrivateKeyFormat(privKeyFormat)
-        self.pubKeyFormat = PublicKeyFormat(pubKeyFormat)
-        self.addressFormat = AddressFormat(addressFormat)
+    ## Useful links: 
+    #   - https://en.bitcoin.it/wiki/Address
+    #   - https://bitcoin.org/en/developer-guide#private-key-formats
+    #   - https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+    def __init__(self, privKey=None):
         if privKey is None:
             self.privKey = None # Instantiate instance variable
             self.privKey = self.generatePrivateKey()
         else:
             self.privKey = privKey
 
-    def getPrivKey(self):
-        return self.privKeyFormat.format(self.privKey)
+    def getPrivKey(self, format="standard"):
+        return Format(format).format(self.privKey)
 
-    def getPubKey(self):
+    def getPubKey(self, format="uncompress"):
         pubKey = self.generatePublicKey(self.privKey)
-        return self.pubKeyFormat.format(pubKey)
+        return Format(format).format(pubKey)
 
-    def getAddress(self):
+    def getAddress(self, format="classic"):
         btc_addr = self.generateAddress(self.getPubKey())
-        return self.addressFormat.format(btc_addr)
+        return Format(format).format(btc_addr)
 
     def generateAddress(self, pubKey):
         pubKeySHA256 = hashlib.sha256(self.getPubKey()).digest()

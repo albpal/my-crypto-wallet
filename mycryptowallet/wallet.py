@@ -13,10 +13,13 @@ class Wallet:
         db = plyvel.DB(self.db_path, create_if_missing=True)
         db.put(new_address.getAddress(), new_address.getPrivKey(), sync=True)
         db.close()
-        print("#### New address generated ####")
-        print("     Private key (standard format):  %s"%(new_address.getPrivKey().hex()))
-        print("     Public key (uncompress format): %s"%(new_address.getPubKey().hex()))
-        print("     Bitcoin address:                %s"%(new_address.getAddress().decode()))
+        print(" > New address generated (raws are binary, the others are in base58 encoded):")
+        print("     Private key (raw):                        %s"%(new_address.getPrivKey().hex()))
+        print("     Private key (WIF uncompressed format):    %s"%(new_address.getPrivKey(format="WIF-UNCOMPRESSED").decode()))
+        print("     Private key (WIF compressed format):      %s"%(new_address.getPrivKey(format="WIF-COMPRESSED").decode()))
+        print("     Public key (raw):                         %s"%(new_address.getPubKey().hex()))
+        print("     Public key (compressed format):           %s"%(new_address.getPubKey("compressed").decode()))
+        print("     Bitcoin address:                          %s"%(new_address.getAddress().decode()))
         return new_address.getAddress().decode()
 
     def listAddresses(self):
@@ -32,7 +35,11 @@ class Wallet:
 
     def deleteAddress(self, address):
         db = plyvel.DB(self.db_path, create_if_missing=True)
-        db.delete(address.encode(), sync=True)
+        if address == "all":
+            for key, value in db:
+                db.delete(key, sync=True)
+        else:
+            db.delete(address.encode(), sync=True)
         db.close()
 
 def showHelpMain():
@@ -53,7 +60,7 @@ def showHelpCreate():
 def showHelpDelete():
     print("\nwallet.py delete <object>")
     print("     objects:")
-    print("         address - deletes one or more addresses")
+    print("         address - deletes one or more addresses. all delete all addresses")
     print("\n")
 
 def showHelpList():

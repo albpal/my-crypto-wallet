@@ -18,9 +18,7 @@ Address 1: b'1NKm5vvjridBZVGTTsVkXRHS2yEunRSyxd'
 Address 2: b'1QBkZibsYKf8fjhQHri57zWtq2V9XtmgLr'
 ```
 ```
-python mycryptowallet/wallet.py delete address 
-
-1ArV16N7JfR86xxKaxZVwpc8HgDBdohDT1 1G3vKUrnYU4AyDuUj1CbmX8fzAA63MFeVm 1GDkrfpDjzKjrMU7ky2rQYNVCknDd9onx 1QD2bgC1cpGV8zSDWd4VwfiAPHvn9PfPMX
+python mycryptowallet/wallet.py delete address 1ArV16N7JfR86xxKaxZVwpc8HgDBdohDT1 1G3vKUrnYU4AyDuUj1CbmX8fzAA63MFeVm 1GDkrfpDjzKjrMU7ky2rQYNVCknDd9onx 1QD2bgC1cpGV8zSDWd4VwfiAPHvn9PfPMX
 ```
 ```
 python wallet.py

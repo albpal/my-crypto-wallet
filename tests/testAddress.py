@@ -21,4 +21,22 @@ class TestAddress:
         self.testunit.assertTrue(addr.verify(bytes("data", 'utf-8'), signature))
         self.testunit.assertFalse(addr.verify(bytes("Data", 'utf-8'), signature))
 
+    def testWIFUnCompressedFormat(self):
+        _privKey=binascii.unhexlify("7eb21e1fd7ce5a4b852443d88d0cb8042d44e2d0e435d536f6554babe7ece2ee")
+        addr = address.Address(privKey=_privKey)
+        self.testunit.assertTrue(addr.getPrivKey(format="WIF-UNCOMPRESSED").decode() == "5Jn5rYMfc6JcgkLtr8XDosjoQzdr7X6sPXeFC5RuLbr6awAw9gK")
+        self.testunit.assertTrue(addr.getAddress().decode() == "18mMPWwYhc8NY1B8LL2eGvPSQPZyxGWHQA")
+    
+    def testWIFCompressedFormat(self):
+        _privKey=binascii.unhexlify("7eb21e1fd7ce5a4b852443d88d0cb8042d44e2d0e435d536f6554babe7ece2ee")
+        addr = address.Address(privKey=_privKey)
+        self.testunit.assertTrue(addr.getPrivKey(format="WIF-COMPRESSED").decode() == "L1TzRfQDPtQkWSJoqrCPXtwuruPdmmruQSFPdtYv1WoheJ9FkGe2")
+        self.testunit.assertTrue(addr.getAddress().decode() == "18mMPWwYhc8NY1B8LL2eGvPSQPZyxGWHQA")
+
+    def testCompressedPubkey(self):
+        _privKey=binascii.unhexlify("7eb21e1fd7ce5a4b852443d88d0cb8042d44e2d0e435d536f6554babe7ece2ee")
+        addr = address.Address(privKey=_privKey)
+        self.testunit.assertTrue(addr.getPrivKey().hex() == "7eb21e1fd7ce5a4b852443d88d0cb8042d44e2d0e435d536f6554babe7ece2ee")
+        self.testunit.assertTrue(addr.getPubKey("compressed").decode() == "24tu7CXWBB7guwNo3FvSA4T1YfxY6EhrufqfamQ8z8KRL")
+        self.testunit.assertTrue(addr.getAddress().decode() == "18mMPWwYhc8NY1B8LL2eGvPSQPZyxGWHQA")
 

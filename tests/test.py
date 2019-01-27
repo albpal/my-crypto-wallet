@@ -9,6 +9,9 @@ class TestMyCryptoWallet(unittest.TestCase):
         address = TestAddress(self)
         address.testAddressGeneration()
         address.testAddressSigning()
+        address.testWIFCompressedFormat()
+        address.testWIFUnCompressedFormat()
+        address.testCompressedPubkey()
 
     def test_wallet(self):
         wallet = TestWallet(self)
