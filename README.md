@@ -5,10 +5,13 @@ Simple wallet I'm building for learning purposes. To use it (Python 3.6 or highe
 ```
 python wallet.py create address
 
-#### New address generated ####
-     Private key (standard format):  f6fc7b120fc5f2a01550eebed7def18ecc999369ad66a42b16987a12005eaf21
-     Public key (uncompress format): 047bf599045966fb5565f48506c1d1b999533ea9f1689146aaa357b594575394f2c0ab89c70426b27e04cb50c923451754c24c780d1f2d4d589a23046553b783c0
-     Bitcoin address:                1nhD5prA9ueH2brnvrJ6k2ZfhrckbgrPD
+> New address generated (raws are binary, the others are in base58 encoded):
+     Private key (raw):                        22ba635095c52fbbc2500177c6b10c3983b6e8e2dcb494a2f02a84d14869eec8
+     Private key (WIF uncompressed format):    5J5afSmhC7nBcKBGp4Up6Tc9QMNFwri3m8LQqSW8x5xJ2KGRj6q
+     Private key (WIF compressed format):      KxPDagkGQ4vRpsELniMks6S864tpy8QBBmNgCoZc68s48TKY1xfa
+     Public key (raw):                         04640b8f007173b2f768a18fdc9d02f53dc0af3a99cb1476bcb2ac8b47ca42c1231b742869c9a44aabccadb571ae3d5e7a3a9c2f13498b06e3adf3ef3c7ff4e01f
+     Public key (compressed format):           21RV73LHam3MfQcLbzy9ueocFhgzPXeXQasDyWCsSDiZp
+     Bitcoin address:                          1KwQm2hSv3o6TwpNP1H32HTjMRcH2KdKmA
 ```
 ```
 python mycryptowallet/wallet.py list addresses
