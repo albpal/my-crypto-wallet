@@ -35,23 +35,19 @@ class Format:
 class AddressFormat:
     def classic(pubKey):
         uncompress_pkey = Format(format="uncompressed").format(pubKey)
-        pubKeySHA256 = hashlib.sha256(uncompress_pkey).digest()
-        hash160 = ripemd160(pubKeySHA256).digest()
-        addr_without_checksum = binascii.unhexlify("00") + hash160
-        # checksum = hashlib.sha256(hashlib.sha256(addr_without_checksum).digest()).digest()[:4]
+        addr_without_checksum = binascii.unhexlify("00") + hash160(uncompress_pkey).digest()
         btc_addr = base58.b58encode_check(addr_without_checksum)
         return btc_addr
 
     def redeemScript(pubKey):
         compressed_pkey = Format(format="compressed").format(pubKey)
-        pubKeySHA256 = hashlib.sha256(compressed_pkey).digest()
-        redeem_script = binascii.unhexlify("0014") + ripemd160(pubKeySHA256).digest()
+        redeem_script = binascii.unhexlify("0014") + hash160(compressed_pkey).digest()
         return redeem_script
 
     def p2shFormat(pubKey):
         redeem_script = AddressFormat.redeemScript(pubKey)
         addr_without_checksum = binascii.unhexlify("05") + hash160(redeem_script).digest()
-        checksum = hashlib.sha256(hashlib.sha256(addr_without_checksum).digest()).digest()[:4]
+        checksum = doubleSHA256(addr_without_checksum).digest()[:4]
         return addr_without_checksum + checksum
 
 class PublicKeyFormat:
@@ -73,10 +69,10 @@ class PrivateKeyFormat:
     
     def WIFUncompressedFormat(privKey):
         mainnet_address = binascii.unhexlify("80") + privKey
-        checksum = hashlib.sha256(hashlib.sha256(mainnet_address).digest()).digest()[:4]
+        checksum = doubleSHA256(mainnet_address).digest()[:4]
         return mainnet_address + checksum
 
     def WIFCompressedFormat(privKey):
         mainnet_address = binascii.unhexlify("80") + privKey + binascii.unhexlify("01")
-        checksum = hashlib.sha256(hashlib.sha256(mainnet_address).digest()).digest()[:4]
+        checksum = doubleSHA256(mainnet_address).digest()[:4]
         return mainnet_address + checksum
