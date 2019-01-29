@@ -14,15 +14,7 @@ class Wallet:
         db = plyvel.DB(self.db_path, create_if_missing=True)
         db.put(new_address.getAddress(), new_address.getPrivKey(), sync=True)
         db.close()
-        print(" > New address generated (raws are binary, the others are in base58 encoded):")
-        print("     Private key (raw):                        %s"%(new_address.getPrivKey().hex()))
-        print("     Private key (WIF uncompressed format):    %s"%(base58.b58encode(new_address.getPrivKey(format="WIF-UNCOMPRESSED")).decode()))
-        print("     Private key (WIF compressed format):      %s"%(base58.b58encode(new_address.getPrivKey(format="WIF-COMPRESSED")).decode()))
-        print("     Public key (raw):                         %s"%(new_address.getPubKey().hex()))
-        print("     Public key (compressed format):           %s"%(base58.b58encode(new_address.getPubKey("compressed")).decode()))
-        print("     Bitcoin address:                          %s"%(new_address.getAddress().decode()))
-        print("     Bitcoin P2SH address:                     %s"%(base58.b58encode(new_address.getAddress(format="p2sh")).decode()))
-        print("     Bitcoin redeem script:                    %s"%(new_address.getAddress(format="redeem").hex()))
+        self.showInfo(new_address)
         return new_address.getAddress().decode()
 
     def listAddresses(self):
@@ -44,6 +36,25 @@ class Wallet:
         else:
             db.delete(address.encode(), sync=True)
         db.close()
+    
+    def importAddress(self, privKey):
+        new_address = Address(privKey=privKey)
+        db = plyvel.DB(self.db_path, create_if_missing=True)
+        db.put(new_address.getAddress(), new_address.getPrivKey(), sync=True)
+        db.close()
+        self.showInfo(new_address)
+        return new_address.getAddress().decode()
+
+    def showInfo(self, addr):
+        print(" > New address generated (raws are binary, the others are in base58 encoded):")
+        print("     Private key (raw):                        %s"%(addr.getPrivKey().hex()))
+        print("     Private key (WIF uncompressed format):    %s"%(base58.b58encode(addr.getPrivKey(format="WIF-UNCOMPRESSED")).decode()))
+        print("     Private key (WIF compressed format):      %s"%(base58.b58encode(addr.getPrivKey(format="WIF-COMPRESSED")).decode()))
+        print("     Public key (raw):                         %s"%(addr.getPubKey().hex()))
+        print("     Public key (compressed format):           %s"%(base58.b58encode(addr.getPubKey("compressed")).decode()))
+        print("     Bitcoin address:                          %s"%(addr.getAddress().decode()))
+        print("     Bitcoin P2SH address:                     %s"%(base58.b58encode(addr.getAddress(format="p2sh")).decode()))
+        print("     Bitcoin redeem script:                    %s"%(addr.getAddress(format="redeem").hex()))
 
 def showHelpMain():
     print("\nwallet.py <action> <object>")
@@ -51,6 +62,7 @@ def showHelpMain():
     print("         create")
     print("         list")
     print("         delete")
+    print("         import")
     print("   For more information use help in every action")
     print("\n")
 
@@ -58,6 +70,12 @@ def showHelpCreate():
     print("\nwallet.py create <object>")
     print("     objects:")
     print("         address -  creates and address")
+    print("\n")
+
+def showHelpImport():
+    print("\nwallet.py create <object>")
+    print("     objects:")
+    print("         address -  Followed by private key to import. It can be binary (hex), WIF uncompress or WIF compress")
     print("\n")
 
 def showHelpDelete():
@@ -81,6 +99,16 @@ def parseActionCreate():
         w.createAddress()
     else:
         showHelpCreate()
+
+def parseActionImport():
+    if len(sys.argv) < 4:
+        showHelpImport()
+        return
+    if sys.argv[2] == "address":
+        w = Wallet()
+        w.importAddress(sys.argv[3])
+    else:
+        showHelpImport()
 
 def parseActionList():
     if len(sys.argv) < 3:
@@ -110,6 +138,8 @@ def parseActions():
         parseActionDelete()
     elif sys.argv[1] == "list":
         parseActionList()
+    elif sys.argv[1] == "import":
+        parseActionImport()
     else:
         showHelpMain()
 

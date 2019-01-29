@@ -23,6 +23,12 @@ class TestWallet:
         w.deleteAddress(btc_address1)
         addresses=w.listAddresses()
         self.testunit.assertFalse(btc_address1 in addresses)
+    
+    def testImportAddress(self):
+        w = wallet.Wallet()
+        btc_address1=w.importAddress("5JHd7qcD6xaMcaMw6MBo9rSxciewMAauVRw6uYYwCkjubXsNUny")
+        addresses=w.listAddresses()
+        self.testunit.assertTrue("19LH6eahzaBVU9rz6TK81rUJ8ZfdyAsM3S" in addresses)
 
 
 

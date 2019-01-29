@@ -18,6 +18,7 @@ class TestMyCryptoWallet(unittest.TestCase):
         wallet = TestWallet(self)
         wallet.testCreateAddress()
         wallet.testListAddress()
+        wallet.testImportAddress()
     
 
 if __name__ == '__main__':
