@@ -7,6 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 from formats import *
+from utils import *
 
 class Address:
     ## This Address class stores its data in big endian bytes
@@ -21,29 +22,28 @@ class Address:
             self.privKey = None # Instantiate instance variable
             self.privKey = self.generatePrivateKey()
         else:
-            self.privKey = privKey
+            if len(privKey) < 64:
+                if privKey[0] == "5": # WIF format uncompressed
+                    self.privKey = base58.b58decode(privKey)[1:-4]
+                elif privKey[0] == "L" or privKey[0] == "K": # WIF format compressed
+                    self.privKey = base58.b58decode(privKey)[1:-5]
+                else:
+                    raise BaseException("Incorrect private key %s"%(privKey))
+            else:
+                self.privKey = binascii.unhexlify(privKey)
 
     def getPrivKey(self, format="standard"):
         return Format(format).format(self.privKey)
 
-    def getPubKey(self, format="uncompress"):
+    def getPubKey(self, format="uncompressed"):
         pubKey = self.generatePublicKey(self.privKey)
         return Format(format).format(pubKey)
 
     def getAddress(self, format="classic"):
-        btc_addr = self.generateAddress(self.getPubKey())
-        return Format(format).format(btc_addr)
-
-    def generateAddress(self, pubKey):
-        pubKeySHA256 = hashlib.sha256(self.getPubKey()).digest()
-        hash160 = self.ripemd160(pubKeySHA256).digest()
-        addr_without_checksum = binascii.unhexlify("00") + hash160
-        checksum = hashlib.sha256(hashlib.sha256(addr_without_checksum).digest()).digest()[:4]
-        btc_addr = base58.b58encode(addr_without_checksum + checksum)
-        return btc_addr
+        return Format(format).format(self.generatePublicKey(self.privKey))
 
     def generatePublicKey(self, privKey):
-        return binascii.unhexlify("04") + bytes(ecdsa.SigningKey.from_string(privKey, curve=ecdsa.SECP256k1).get_verifying_key().to_string())
+        return bytes(ecdsa.SigningKey.from_string(privKey, curve=ecdsa.SECP256k1).get_verifying_key().to_string())
 
     def generatePrivateKey(self):
         if self.privKey is not None:
@@ -52,11 +52,6 @@ class Address:
         while number == 0 or number > 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140:
             number = secrets.randbelow(1 << 256)
         return number.to_bytes(32, byteorder='big')
-
-    def ripemd160(self, x):
-        d = hashlib.new('ripemd160')
-        d.update(x)
-        return d
 
     def sign(self, data):
         sk = ecdsa.SigningKey.from_string(self.privKey, curve=ecdsa.SECP256k1)

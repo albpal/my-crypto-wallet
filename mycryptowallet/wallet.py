@@ -3,6 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 from address import Address
 import plyvel
+import base58
 
 class Wallet:
     def __init__(self):
@@ -15,11 +16,13 @@ class Wallet:
         db.close()
         print(" > New address generated (raws are binary, the others are in base58 encoded):")
         print("     Private key (raw):                        %s"%(new_address.getPrivKey().hex()))
-        print("     Private key (WIF uncompressed format):    %s"%(new_address.getPrivKey(format="WIF-UNCOMPRESSED").decode()))
-        print("     Private key (WIF compressed format):      %s"%(new_address.getPrivKey(format="WIF-COMPRESSED").decode()))
+        print("     Private key (WIF uncompressed format):    %s"%(base58.b58encode(new_address.getPrivKey(format="WIF-UNCOMPRESSED")).decode()))
+        print("     Private key (WIF compressed format):      %s"%(base58.b58encode(new_address.getPrivKey(format="WIF-COMPRESSED")).decode()))
         print("     Public key (raw):                         %s"%(new_address.getPubKey().hex()))
-        print("     Public key (compressed format):           %s"%(new_address.getPubKey("compressed").decode()))
+        print("     Public key (compressed format):           %s"%(base58.b58encode(new_address.getPubKey("compressed")).decode()))
         print("     Bitcoin address:                          %s"%(new_address.getAddress().decode()))
+        print("     Bitcoin P2SH address:                     %s"%(base58.b58encode(new_address.getAddress(format="p2sh")).decode()))
+        print("     Bitcoin redeem script:                    %s"%(new_address.getAddress(format="redeem").hex()))
         return new_address.getAddress().decode()
 
     def listAddresses(self):

@@ -3,15 +3,17 @@
 Simple wallet I'm building for learning purposes. To use it (Python 3.6 or higher):
 
 ```
-python wallet.py create address
+python mycryptowallet/wallet.py create address
 
-> New address generated (raws are binary, the others are in base58 encoded):
-     Private key (raw):                        22ba635095c52fbbc2500177c6b10c3983b6e8e2dcb494a2f02a84d14869eec8
-     Private key (WIF uncompressed format):    5J5afSmhC7nBcKBGp4Up6Tc9QMNFwri3m8LQqSW8x5xJ2KGRj6q
-     Private key (WIF compressed format):      KxPDagkGQ4vRpsELniMks6S864tpy8QBBmNgCoZc68s48TKY1xfa
-     Public key (raw):                         04640b8f007173b2f768a18fdc9d02f53dc0af3a99cb1476bcb2ac8b47ca42c1231b742869c9a44aabccadb571ae3d5e7a3a9c2f13498b06e3adf3ef3c7ff4e01f
-     Public key (compressed format):           21RV73LHam3MfQcLbzy9ueocFhgzPXeXQasDyWCsSDiZp
-     Bitcoin address:                          1KwQm2hSv3o6TwpNP1H32HTjMRcH2KdKmA
+ > New address generated (raws are binary, the others are in base58 encoded):
+     Private key (raw):                        3e1258347b897fee4055b0ae9f59b459f31905815e9214bfddede6990f73b36f
+     Private key (WIF uncompressed format):    5JHd7qcD6xaMcaMw6MBo9rSxciewMAauVRw6uYYwCkjubXsNUny
+     Private key (WIF compressed format):      KyJNRBYQRJJDz2FPkc6ei5FaUerSt1JegV3o4vFxEt4P924VYdTn
+     Public key (raw):                         0444182ef73b3ed004308d41466776b00faaf6104760627490850b94af2c84aa3443266b8cd611d6205c20f809fdf390340873a8160638955a9504c65a46922db0
+     Public key (compressed format):           g3SrTQLgheE7ZPhTjtLw4iQnakzzE3xPuzE7q3Hofpro
+     Bitcoin address:                          19LH6eahzaBVU9rz6TK81rUJ8ZfdyAsM3S
+     Bitcoin P2SH address:                     3K3utwxrfhcNvaVznLR261sWBdt3z4BMoF
+     Bitcoin redeem script:                    001441b04df087fcec32ea1900f38fda3c14520428ef
 ```
 ```
 python mycryptowallet/wallet.py list addresses
