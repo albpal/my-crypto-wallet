@@ -33,14 +33,14 @@ class Address:
                 self.privKey = binascii.unhexlify(privKey)
 
     def getPrivKey(self, format="standard"):
-        return Format(format).format(self.privKey)
+        return PrivateKeyFormat(format).format(self.privKey)
 
     def getPubKey(self, format="uncompressed"):
         pubKey = self.generatePublicKey(self.privKey)
-        return Format(format).format(pubKey)
+        return PublicKeyFormat(format).format(pubKey)
 
     def getAddress(self, format="classic"):
-        return Format(format).format(self.generatePublicKey(self.privKey))
+        return AddressFormat(format).format(self.generatePublicKey(self.privKey))
 
     def generatePublicKey(self, privKey):
         return bytes(ecdsa.SigningKey.from_string(privKey, curve=ecdsa.SECP256k1).get_verifying_key().to_string())
