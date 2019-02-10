@@ -12,7 +12,9 @@ class TestMyCryptoWallet(unittest.TestCase):
         address.testWIFCompressedFormat()
         address.testWIFUnCompressedFormat()
         address.testCompressedPubkey()
-        address.testP2SH()
+        address.testP2SH_P2WPKH()
+        address.testP2SH_P2WPSH()
+        address.testP2SH_P2PKH()
 
     def test_wallet(self):
         wallet = TestWallet(self)
