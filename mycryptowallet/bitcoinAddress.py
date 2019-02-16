@@ -9,8 +9,8 @@ from publicKey import *
 
 class BitcoinAddress:
     def __init__(self, pubKey):
-        self.p2pkh = self.generate_P2PKH(pubKey)
-        self.p2pkh_compressed = self.generate_P2PKH_compressed(pubKey)
+        self.p2pkh = self.generate_P2PKH(pubKey, compressed=False)
+        self.p2pkh_compressed = self.generate_P2PKH(pubKey, compressed=True)
         self.p2psh_p2wpkh = self.generate_P2PSH(self.p2wpkh_witnessProgram(pubKey))
         self.p2psh_p2wpsh = self.generate_P2PSH(self.p2wpsh_witnessProgram(pubKey))
         self.p2psh_p2pkh = self.generate_P2PSH(self.p2pkh_redeemScript(pubKey))
@@ -35,17 +35,13 @@ class BitcoinAddress:
 #################
 # ADDRESSES     #
 #################
-    def generate_P2PKH(self, pubKey):
+    def generate_P2PKH(self, pubKey, compressed=True):
         address_version_byte = binascii.unhexlify("00")
-        uncompress_pkey = binascii.unhexlify(pubKey.get(format="uncompressed"))
-        addr_without_checksum = address_version_byte + hash160(uncompress_pkey).digest()
-        btc_addr = base58.b58encode_check(addr_without_checksum)
-        return btc_addr
-
-    def generate_P2PKH_compressed(self, pubKey):
-        address_version_byte = binascii.unhexlify("00")
-        compress_pkey = binascii.unhexlify(pubKey.get(format="compressed"))
-        addr_without_checksum = address_version_byte + hash160(compress_pkey).digest()
+        if compressed:
+            pkey = binascii.unhexlify(pubKey.get(format="compressed"))
+        else:
+            pkey = binascii.unhexlify(pubKey.get(format="uncompressed"))
+        addr_without_checksum = address_version_byte + hash160(pkey).digest()
         btc_addr = base58.b58encode_check(addr_without_checksum)
         return btc_addr
 
