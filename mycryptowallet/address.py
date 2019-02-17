@@ -30,7 +30,7 @@ class Address:
     def getPubKey(self, format="uncompressed"):
         return self.pubKey.get(format=format)
 
-    def getAddress(self, format="classic"):
+    def getAddress(self, format="p2pkh"):
         return self.bitcoin_address.get(format)
 
     def sign(self, data):

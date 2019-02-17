@@ -9,72 +9,98 @@ from publicKey import *
 
 class BitcoinAddress:
     def __init__(self, pubKey):
-        self.p2pkh = self.generate_P2PKH(pubKey, compressed=False)
-        self.p2pkh_compressed = self.generate_P2PKH(pubKey, compressed=True)
-        self.p2psh_p2wpkh = self.generate_P2PSH(self.p2wpkh_witnessProgram(pubKey))
-        self.p2psh_p2wpsh = self.generate_P2PSH(self.p2wpsh_witnessProgram(pubKey))
-        self.p2psh_p2pkh = self.generate_P2PSH(self.p2pkh_redeemScript(pubKey))
-        self.p2psh_p2multisig = self.generate_P2PSH(self.p2multisig_redeemScript(pubKey))
+        self.p2pkh = self.get_address_for_P2PKH_payments(pubKey, compressed=False)
+        self.p2pkh_compressed = self.get_address_for_P2PKH_payments(pubKey, compressed=True)
+        self.p2sh_p2wpkh = self.get_address_for_P2PSH_payments(self.p2wpkh_witnessProgram_for_p2sh(pubKey))
+        self.p2sh_p2pkh = self.get_address_for_P2PSH_payments(self.p2pkh_script(pubKey))
+        self.p2sh_p2multisig = self.get_address_for_P2PSH_payments(self.p2multisig_script(pubKey))
+        self.p2wpkh = self.get_address_for_P2PKH_payments(pubKey, compressed=True, encoding="bech32")
+        self.p2wsh_p2pkh = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2pkh_script(pubKey))
+        self.p2wsh_p2multisig = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2multisig_script(pubKey))
 
-    def get(self, format="classic"):
-        if format.upper() == "CLASSIC":
+    def get(self, format="P2PKH"):
+        if format.upper() == "P2PKH":
             return self.p2pkh
         elif format.upper() == "COMPRESSED":
             return self.p2pkh_compressed
         elif format.upper() == "P2SH-P2PKH":
-            return (self.p2psh_p2pkh[0], self.p2psh_p2pkh[1])
+            return (self.p2sh_p2pkh[0], self.p2sh_p2pkh[1])
         elif format.upper() == "P2SH-P2WPKH":
-            return (self.p2psh_p2wpkh[0], self.p2psh_p2wpkh[1])
-        elif format.upper() == "P2SH-P2WPSH":
-            return (self.p2psh_p2wpsh[0], self.p2psh_p2wpsh[1])
+            return (self.p2sh_p2wpkh[0], self.p2sh_p2wpkh[1])
         elif format.upper() == "P2SH-P2MULTISIG":
-            return (self.p2psh_p2multisig[0], self.p2psh_p2multisig[1])
+            return (self.p2sh_p2multisig[0], self.p2sh_p2multisig[1])
+        elif format.upper() == "P2WPKH":
+            return self.p2wpkh
+        elif format.upper() == "P2WSH-P2PKH":
+            return (self.p2wsh_p2pkh[0], self.p2wsh_p2pkh[1])
+        elif format.upper() == "P2WSH-P2MULTISIG":
+            return (self.p2wsh_p2multisig[0], self.p2wsh_p2multisig[1])
         else:
             raise BaseException("Error: Address format %s is not valid."%(format))
 
 #################
-# ADDRESSES     #
+#   ADDRESSES   #
 #################
-    def generate_P2PKH(self, pubKey, compressed=True):
-        address_version_byte = binascii.unhexlify("00")
+    def get_address_for_P2PKH_payments(self, pubKey, compressed=True, encoding="base58", addr_version=0):
         if compressed:
-            pkey = binascii.unhexlify(pubKey.get(format="compressed"))
+            pubkey_hex = binascii.unhexlify(pubKey.get(format="compressed"))
         else:
-            pkey = binascii.unhexlify(pubKey.get(format="uncompressed"))
-        addr_without_checksum = address_version_byte + hash160(pkey).digest()
-        btc_addr = base58.b58encode_check(addr_without_checksum)
+            pubkey_hex = binascii.unhexlify(pubKey.get(format="uncompressed"))
+
+        hashed_key = hash160(pubkey_hex).digest()
+
+        if encoding == "base58":#BIP16 base58 encoding
+            btc_addr = base58.b58encode_check(addr_version.to_bytes(1, byteorder="big") + hashed_key).decode()
+        elif encoding == "bech32":#BIP141 segwit base32 checksum aka bech32 encoding
+            if not compressed:
+                raise BaseException("Bech32 encoding only supports compressed public keys")
+            btc_addr = segwit_encode("bc", addr_version, hashed_key)
+
         return btc_addr
 
-    def generate_P2PSH(self, redeemScript):
+    def get_address_for_P2PSH_payments(self, redeemScript, encoding="base58"):
         address_version_byte = binascii.unhexlify("05")
-        addr_without_checksum = address_version_byte + hash160(redeemScript).digest()
+        addr_without_checksum = address_version_byte + hash160(binascii.unhexlify(redeemScript)).digest()
         checksum = doubleSHA256(addr_without_checksum).digest()[:4]
-        return (addr_without_checksum + checksum, redeemScript)
+        btc_addr = base58.b58encode_check(addr_without_checksum)
+        return (btc_addr.decode(), redeemScript)
 
-#####################
-# REDEEM SCRIPTS    #
-#####################
-    def p2pkh_redeemScript(self, pubKey):
-        #OP_DUP OP_HASH160 <PubkeyHash> OP_EQUALVERIFY OP_CHECKSIG
-        compressed_pkey = binascii.unhexlify(pubKey.get(format="compressed"))
-        redeemScript = binascii.unhexlify("76" + "a9" + "14") + hash160(compressed_pkey).digest() + binascii.unhexlify("88" + "ac")
-        return redeemScript
+    def get_address_for_nativeSegwit_P2WPSH_payments(self, witnessProgram):
+        # https://bitcointalk.org/index.php?topic=4992632.0
+        # https://github.com/sipa/bech32/blob/master/ref/python/segwit_addr.py
+        hrp = "bc"
+        wit_version_byte = 0
 
-    def p2multisig_redeemScript(self, pubKey):
+        v0_witnessProgram = sha256(binascii.unhexlify(witnessProgram)).digest()
+        witnessProgram = binascii.hexlify(v0_witnessProgram).decode()
+
+        address = segwit_encode(hrp, wit_version_byte, v0_witnessProgram)
+        return (address, binascii.hexlify(v0_witnessProgram).decode())
+
+########################################
+#       STANDARD SCRIPTS               #
+########################################
+    def p2pkh_script(self, pubKey):
+        compressed_pubkey = binascii.unhexlify(pubKey.get(format="compressed"))
+        (O_DUP, OP_HASH160, PubkeyHash, OP_EQUALVERIFY, OP_CHECKSIG) = (binascii.unhexlify("76"), binascii.unhexlify("a9"), binascii.unhexlify("14") + hash160(compressed_pubkey).digest(), binascii.unhexlify("88"), binascii.unhexlify("ac"))
+        redeemScript = O_DUP + OP_HASH160 + PubkeyHash + OP_EQUALVERIFY + OP_CHECKSIG
+        return binascii.hexlify(redeemScript).decode()
+
+    def p2multisig_script(self, pubKey):
         #<OP_2> <A pubkey> <B pubkey> <C pubkey> <OP_3> OP_CHECKMULTISIG
-        uncompressed_pkey = binascii.unhexlify(pubKey.get(format="uncompressed"))
-        redeemScript = binascii.unhexlify("51" + "41") + uncompressed_pkey + binascii.unhexlify("51" + "ae")
-        return redeemScript
+        uncompressed_pubkey = binascii.unhexlify(pubKey.get(format="uncompressed"))
+        redeemScript = binascii.unhexlify("51" + "41") + uncompressed_pubkey + binascii.unhexlify("51" + "ae")
+        return binascii.hexlify(redeemScript).decode()
 
-    def p2wpkh_witnessProgram(self, pubKey):
+    def p2wpkh_witnessProgram_for_p2sh(self, pubKey):
         compressed_pkey = binascii.unhexlify(pubKey.get(format="compressed"))
         (version_byte, pubkey_size_byte) = ("00", "14")
         v0_witnessProgram = binascii.unhexlify(version_byte + pubkey_size_byte) + hash160(compressed_pkey).digest()
-        return v0_witnessProgram
+        return binascii.hexlify(v0_witnessProgram).decode()
 
-    def p2wpsh_witnessProgram(self, pubKey):
-        compressed_pkey = binascii.unhexlify(pubKey.get(format="compressed"))
-        witness_script = binascii.unhexlify("76" + "a9") + hash160(compressed_pkey).digest() + binascii.unhexlify("88" + "ac")
+    def p2wpsh_witnessProgram_for_p2sh(self, pubKey):
+        compressed_pubkey = binascii.unhexlify(pubKey.get(format="compressed"))
+        witness_script = binascii.unhexlify("76" + "a9") + hash160(compressed_pubkey).digest() + binascii.unhexlify("88" + "ac")
         (version_byte, pubkey_size_byte) = ("00", "20")
         v0_witnessProgram = binascii.unhexlify(version_byte + pubkey_size_byte) + sha256(witness_script).digest()
-        return v0_witnessProgram
+        return binascii.hexlify(v0_witnessProgram).decode()
