@@ -17,7 +17,17 @@ class PrivateKey:
         self.netCode = self.getNetID(net)
 
     def isValid(self, privKey):
-        return self.isWIFUncompressed(privKey) or self.isWIFCompressed(privKey) or self.isRawHexa(privKey)
+        hex_number=0
+        if self.isWIFUncompressed(privKey):
+            hex_number=binascii.hexlify(base58.b58decode(privKey)[1:-4])
+        elif self.isWIFCompressed(privKey):
+            hex_number=binascii.hexlify(base58.b58decode(privKey)[1:-5])
+        elif self.isRawHexa(privKey):
+            hex_number=privKey
+        else:
+            return false
+
+        return int(hex_number, 16) > 0 and int(hex_number, 16) < 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140
 
     def isWIFUncompressed(self, privKey):
         return privKey[0] == "5" 
@@ -71,6 +81,6 @@ class PrivateKey:
 
     def generatePrivateKey(self):
         number = int(secrets.randbelow(1 << 256))
-        while number == 0 or number > 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140:
+        while number < 1 or number > 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140:
             number = secrets.randbelow(1 << 256)
         return binascii.hexlify(number.to_bytes(32, byteorder='big'))
