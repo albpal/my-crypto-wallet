@@ -48,10 +48,21 @@ class TestAddress:
         self.testunit.assertEqual(addr.getAddress(format="P2SH-P2PKH")[1], "76a91441b04df087fcec32ea1900f38fda3c14520428ef88ac")
 
     def testP2SH_P2MULTISIG(self):
-        addr = address.Address(privKey="5JHd7qcD6xaMcaMw6MBo9rSxciewMAauVRw6uYYwCkjubXsNUny")
-        self.testunit.assertEqual(addr.getPubKey(format="compressed"), "0244182ef73b3ed004308d41466776b00faaf6104760627490850b94af2c84aa34")
-        self.testunit.assertEqual(addr.getAddress(format="P2SH-P2MULTISIG")[0], "3DiL5fRuXGSm6V6QgE227HRcxSqSJvGYrd")
-        self.testunit.assertEqual(addr.getAddress(format="P2SH-P2MULTISIG")[1], "51410444182ef73b3ed004308d41466776b00faaf6104760627490850b94af2c84aa3443266b8cd611d6205c20f809fdf390340873a8160638955a9504c65a46922db051ae")
+        addr1 = address.Address(privKey="5JAwK9bihMRFe9zw32csUUEn7N5MvLvuwXKv5qUnQVjbthZyuwQ")
+        addr2 = address.Address(privKey="5KC6MNFkqN665YAbb1wrveGWmygainm99wX8fSxA779UZh3yP2t")
+        addr3 = address.Address(privKey="5J4DNddHjUkSoG2GZAkxwqmz1T5TTVbnf7Q5ho8Eqkinbc2hvSe")
+        addr4 = address.Address(privKey="5K7idDARSfWLGjA926DFvVL8igZANsJsUcGo8vztmPH45iScp8K")
+
+        pubKey1 = addr1.getPubKey(format="uncompressed")
+        pubKey2 = addr2.getPubKey(format="uncompressed")
+        pubKey3 = addr3.getPubKey(format="uncompressed")
+        pubKey4 = addr4.getPubKey(format="uncompressed")
+
+        msigAddr = address.Address()
+        msigAddr.multisig([pubKey1, pubKey2, pubKey3, pubKey4], n=2, m=4)
+
+        self.testunit.assertEqual(msigAddr.getAddress(format="P2SH-P2MULTISIG")[0], "3Hy6A3rSXKRumyVqURBoiv4QpQLt6vMCzt")
+        self.testunit.assertEqual(msigAddr.getAddress(format="P2SH-P2MULTISIG")[1], "524104fe0fcd054a31130749467f07e272426f7dd7a3029ab5b076d7285a931bd131d34ed9f28b2cc2fe266aa62c4cada3e82b70a4416966902201c4d73759f7f0425e41044f2ec9f80ef2c4f385f3d27b6167f77236de63548723ba1c90a324f4ec46dfd14a2fba5a9c048a5ec310aedfe875d8a254f336e8f7d5d17338d9451dc6f2188c4104aefb86098442adc6c3dffd9b0e27fe8e918462469a5ec5363e26920f09facea70b63e4f4d2736089286d4dd2352ca65016e7d593f105009f9a35c03a2464aa20410451e7f31ea2f5cb14ba76ca20952c1d453fe3a85959ebbefee8912ad6f74c443a03e52ef8a842f890f1ab2d69c6bb418e6de0f15bef944be2883887be3bb75cc054ae")
 
     def testP2WPKH(self):
         addr = address.Address(privKey="KwEhgwz9vbUyd8jPrJR5ix3tR17JPZbtgYDsJyva6cjdJe2dUhPf")
