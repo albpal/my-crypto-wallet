@@ -25,14 +25,16 @@ class PrivateKey:
         elif self.isRawHexa(privKey):
             hex_number=privKey
         else:
-            return false
+            raise Exception("The private key %s is not in one of the following supported formats: WIF Uncompressed, WIF compressed or raw hexadecimal number"%(privKey))
 
         return int(hex_number, 16) > 0 and int(hex_number, 16) < 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140
 
     def isWIFUncompressed(self, privKey):
-        return privKey[0] == "5" 
+        return privKey[0] == "5" and len(privKey) != 64
 
     def isWIFCompressed(self, privKey):
+        if len(privKey) == 64:
+            return False
         return privKey[0] == "L" or privKey[0] == "K"
 
     def isRawHexa(self, privKey):

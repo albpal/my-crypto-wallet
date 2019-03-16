@@ -16,6 +16,7 @@ class TestMyCryptoWallet(unittest.TestCase):
         address.testP2SH_P2PKH()
         address.testP2WPKH()
         address.testP2WPSH_P2PKH()
+        address.testP2SH_P2MULTISIG()
         address.testP2WPSH_P2MULTISIG()
 
     def test_wallet(self):

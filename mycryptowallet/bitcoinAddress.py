@@ -8,15 +8,21 @@ from utils import *
 from publicKey import *
 
 class BitcoinAddress:
-    def __init__(self, pubKey):
-        self.p2pkh = self.get_address_for_P2PKH_payments(pubKey, compressed=False)
-        self.p2pkh_compressed = self.get_address_for_P2PKH_payments(pubKey, compressed=True)
-        self.p2sh_p2wpkh = self.get_address_for_P2PSH_payments(self.p2wpkh_witnessProgram_for_p2sh(pubKey))
-        self.p2sh_p2pkh = self.get_address_for_P2PSH_payments(self.p2pkh_script(pubKey))
-        self.p2sh_p2multisig = self.get_address_for_P2PSH_payments(self.p2multisig_script(pubKey))
-        self.p2wpkh = self.get_address_for_P2PKH_payments(pubKey, compressed=True, encoding="bech32")
-        self.p2wsh_p2pkh = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2pkh_script(pubKey))
-        self.p2wsh_p2multisig = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2multisig_script(pubKey))
+    def __init__(self, pubKey=[], n=1, m=1):
+        if isinstance(pubKey, list):
+            if len(pubKey) < 2:
+                raise Exception("Multisig addresses must have at least 2 public keys")
+            self.p2sh_p2multisig = self.get_address_for_P2PSH_payments(self.p2multisig_script(pubKey, n=n, m=m))
+            self.p2wsh_p2multisig = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2multisig_script(pubKey, n=n, m=m))
+        else:
+            self.p2pkh = self.get_address_for_P2PKH_payments(pubKey, compressed=False)
+            self.p2pkh_compressed = self.get_address_for_P2PKH_payments(pubKey, compressed=True)
+            self.p2sh_p2wpkh = self.get_address_for_P2PSH_payments(self.p2wpkh_witnessProgram_for_p2sh(pubKey))
+            self.p2sh_p2pkh = self.get_address_for_P2PSH_payments(self.p2pkh_script(pubKey))
+            self.p2sh_p2multisig = self.get_address_for_P2PSH_payments(self.p2multisig_script([pubKey.get()]))
+            self.p2wpkh = self.get_address_for_P2PKH_payments(pubKey, compressed=True, encoding="bech32")
+            self.p2wsh_p2pkh = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2pkh_script(pubKey))
+            self.p2wsh_p2multisig = self.get_address_for_nativeSegwit_P2WPSH_payments(self.p2multisig_script([pubKey.get()]))
 
     def get(self, format="P2PKH"):
         if format.upper() == "P2PKH":
@@ -86,21 +92,22 @@ class BitcoinAddress:
         redeemScript = O_DUP + OP_HASH160 + PubkeyHash + OP_EQUALVERIFY + OP_CHECKSIG
         return binascii.hexlify(redeemScript).decode()
 
-    def p2multisig_script(self, pubKey):
+    def p2multisig_script(self, pubKeyList, n=1, m=1):
         #<OP_2> <A pubkey> <B pubkey> <C pubkey> <OP_3> OP_CHECKMULTISIG
-        uncompressed_pubkey = binascii.unhexlify(pubKey.get(format="uncompressed"))
-        redeemScript = binascii.unhexlify("51" + "41") + uncompressed_pubkey + binascii.unhexlify("51" + "ae")
+        redeemScript = binascii.unhexlify(hex(n + 80)[2:])
+
+        uncompressed_pubkey = binascii.unhexlify("41") + binascii.unhexlify(pubKeyList[0].encode('utf-8'))
+        redeemScript = redeemScript + uncompressed_pubkey
+
+        for pubKey in pubKeyList[1:]:
+            uncompressed_pubkey = binascii.unhexlify("41") + binascii.unhexlify(pubKey.encode('utf-8'))
+            redeemScript = redeemScript + uncompressed_pubkey
+
+        redeemScript = redeemScript + binascii.unhexlify(hex(m + 80)[2:]) + binascii.unhexlify("ae")
         return binascii.hexlify(redeemScript).decode()
 
     def p2wpkh_witnessProgram_for_p2sh(self, pubKey):
         compressed_pkey = binascii.unhexlify(pubKey.get(format="compressed"))
         (version_byte, pubkey_size_byte) = ("00", "14")
         v0_witnessProgram = binascii.unhexlify(version_byte + pubkey_size_byte) + hash160(compressed_pkey).digest()
-        return binascii.hexlify(v0_witnessProgram).decode()
-
-    def p2wpsh_witnessProgram_for_p2sh(self, pubKey):
-        compressed_pubkey = binascii.unhexlify(pubKey.get(format="compressed"))
-        witness_script = binascii.unhexlify("76" + "a9") + hash160(compressed_pubkey).digest() + binascii.unhexlify("88" + "ac")
-        (version_byte, pubkey_size_byte) = ("00", "20")
-        v0_witnessProgram = binascii.unhexlify(version_byte + pubkey_size_byte) + sha256(witness_script).digest()
         return binascii.hexlify(v0_witnessProgram).decode()

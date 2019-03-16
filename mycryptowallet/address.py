@@ -19,10 +19,13 @@ class Address:
     #   - https://en.bitcoin.it/wiki/Address
     #   - https://bitcoin.org/en/developer-guide#private-key-formats
     #   - https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    def __init__(self, privKey=None):
+    def __init__(self, privKey=None, n=1, m=1):
         self.privKey = PrivateKey(privKey=privKey)
         self.pubKey = PublicKey(self.privKey)
-        self.bitcoin_address = BitcoinAddress(self.pubKey)
+        self.bitcoin_address = BitcoinAddress(self.pubKey, n=n, m=m)
+
+    def multisig(self, pubKeys, n=1, m=1):
+        self.bitcoin_address = BitcoinAddress(pubKeys, n=n, m=m)
 
     def getPrivKey(self, format="RAW-HEXA"):
         return self.privKey.get(format)

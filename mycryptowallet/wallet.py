@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
 from address import Address
 import plyvel
 import base58
+import utils
 
 class Wallet:
     def __init__(self):
@@ -45,6 +46,98 @@ class Wallet:
         db.close()
         self.showInfo(new_address)
         return new_address.getAddress()
+
+    def createMultisigAddressFromNone(self, n, m):
+        pubKeys=[]
+        for i in range(0, m):
+            pubKey = input("Insert public key %i: "%(i+1))
+            pubKeys.append(pubKey)
+        msigAddr = Address()
+        msigAddr.multisig(pubKeys, n=n, m=m)
+        print("Bitcoin multisig address: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[0]))
+        print("Bitcoin multisig redeem script: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[1]))
+
+    def createMultisigAddressFromRNG(self, n, m):
+        pubKeys=[]
+        pubAddrs=[]
+        for i in range(0, m):
+            random=self.readRandomFromComputer()
+            pubAddr = Address(privKey=random)
+            pubAddrs.append(pubAddr)
+            pubKeys.append(pubAddr.getPubKey(format="uncompressed"))
+        msigAddr = Address()
+        msigAddr.multisig(pubKeys, n=n, m=m)
+        i=0
+        for addr in pubAddrs:
+            i=i+1
+            print("\nAddress %i:"%(i))
+            print("     Private key: %s"%(base58.b58encode(addr.getPrivKey(format="WIF-UNCOMPRESSED")).decode()))
+            print("     Public key: %s\n"%(addr.getPubKey(format="uncompressed")))
+        print("Bitcoin multisig address: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[0]))
+        print("Bitcoin multisig redeem script: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[1]))
+
+    def readRandomFromComputer(self):
+        addr = Address()
+        return addr.getPrivKey()
+
+    def readRandomFromInput(self, i):
+        random = input("Insert random numbers for private key %i: "%(i+1))
+        random = random.replace(" ", "").encode('utf-8')
+        return binascii.hexlify(utils.sha256(random).digest())
+
+    def createAddressFromBoth(self, n, m):
+        pubKeys=[]
+        pubAddrs=[]
+        for i in range(0, m):
+            str1=self.readRandomFromComputer().decode("utf-8")
+            str2=self.readRandomFromInput(i).decode("utf-8")
+            if len(str1) != len(str2):
+                raise Exception("The two generated random numbers have not the same length")
+            random1 = int(str1, 16)
+            random2 = int(str2, 16)
+            random = hex(random1 ^ random2)[2:].zfill(64)
+            pubAddr = Address(privKey=random)
+            pubAddrs.append(pubAddr)
+            pubKeys.append(pubAddr.getPubKey(format="uncompressed"))
+        msigAddr = Address()
+        msigAddr.multisig(pubKeys, n=n, m=m)
+        i=0
+        for addr in pubAddrs:
+            i=i+1
+            print("\nAddress %i:"%(i))
+            print("     Private key: %s"%(base58.b58encode(addr.getPrivKey(format="WIF-UNCOMPRESSED")).decode()))
+            print("     Public key: %s\n"%(addr.getPubKey(format="uncompressed")))
+        print("Bitcoin multisig address: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[0]))
+        print("Bitcoin multisig redeem script: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[1]))
+        
+    def createMultisigAddressFromInput(self, n, m):
+        pubKeys=[]
+        pubAddrs=[]
+        for i in range(0, m):
+            random=self.readRandomFromInput(i)
+            pubAddr = Address(privKey=random)
+            pubAddrs.append(pubAddr)
+            pubKeys.append(pubAddr.getPubKey(format="uncompressed"))
+        msigAddr = Address()
+        msigAddr.multisig(pubKeys, n=n, m=m)
+        i=0
+        for addr in pubAddrs:
+            i=i+1
+            print("\nAddress %i:"%(i))
+            print("     Private key: %s"%(base58.b58encode(addr.getPrivKey(format="WIF-UNCOMPRESSED")).decode()))
+            print("     Public key: %s\n"%(addr.getPubKey(format="uncompressed")))
+        print("Bitcoin multisig address: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[0]))
+        print("Bitcoin multisig redeem script: %s"%(msigAddr.getAddress(format="P2SH-P2MULTISIG")[1]))
+        
+    def createMultisigAddress(self, n, m, entropy_source):
+        if entropy_source == "none":
+            self.createMultisigAddressFromNone(n, m)
+        elif entropy_source == "rng":
+            self.createMultisigAddressFromRNG(n, m)
+        elif entropy_source == "input":
+            self.createMultisigAddressFromInput(n, m)
+        elif entropy_source == "both":
+            self.createAddressFromBoth(n, m)
 
     def showInfo(self, addr):
         print(" > New address generated:")
@@ -89,6 +182,12 @@ def showHelpCreate():
     print("\nwallet.py create <object>")
     print("     objects:")
     print("         address -  creates and address")
+    print("         multisig n m <entropy_source> (rng, input, rng_input, none)-  creates and address")
+    print("                 entropy_source:")
+    print("                     rng: Generates all addresses by you using system randomness")
+    print("                     input: Asks you random numbers which derive private keys, etc.")
+    print("                     rng_input: XOR of an rng generation and the input given by the user")
+    print("                     none: Asks you for the public keys")
     print("\n")
 
 def showHelpImport():
@@ -116,6 +215,16 @@ def parseActionCreate():
     if sys.argv[2] == "address":
         w = Wallet()
         w.createAddress()
+    elif sys.argv[2] == "multisig":
+        if len(sys.argv) < 6:
+            showHelpCreate()
+            return
+        n = int(sys.argv[3])
+        m = int(sys.argv[4])
+        entropy_source= sys.argv[5]
+        w = Wallet()
+        w.createMultisigAddress(n, m, entropy_source)
+
     else:
         showHelpCreate()
 
